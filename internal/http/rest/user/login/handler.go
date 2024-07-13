@@ -20,8 +20,7 @@ type JWTClient interface {
 }
 
 type Service interface {
-	Ping(ctx context.Context) error
-	Register(ctx context.Context, userRegister *entity.UserRegisterJSON) (*entity.UserDB, error)
+	Login(ctx context.Context, userRegister *entity.UserLoginJSON) (*entity.UserDB, error)
 }
 
 type handler struct {
@@ -39,12 +38,12 @@ func NewHandler(logger logging2.Logger, updateService Service, jwtClient JWTClie
 }
 
 func (h handler) Register(router *chi.Mux) {
-	router.Post("/api/user/register", h.userRegister)
+	router.Post("/api/user/login", h.userLogin)
 }
 
-// userRegister /api/user/register
-func (h handler) userRegister(writer http.ResponseWriter, request *http.Request) {
-	userRegister, err := decodeUserRegister(request.Body)
+// userRegister /api/user/login
+func (h handler) userLogin(writer http.ResponseWriter, request *http.Request) {
+	userLogin, err := decodeUserLogin(request.Body)
 	if err != nil {
 		h.logger.Error(err)
 		// 400 — неверный формат запроса;
@@ -53,16 +52,16 @@ func (h handler) userRegister(writer http.ResponseWriter, request *http.Request)
 	}
 
 	// Валидация body полей
-	if len(userRegister.Password) == 0 || len(userRegister.Login) == 0 {
+	if len(userLogin.Password) == 0 || len(userLogin.Login) == 0 {
 		// 400 — неверный формат запроса;
 		writer.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	userDB, err := h.updateService.Register(request.Context(), userRegister)
-	// 409 — логин уже занят;
-	if errors.Is(err, user.ErrNotUniqueLogin) {
-		writer.WriteHeader(http.StatusConflict)
+	userDB, err := h.updateService.Login(request.Context(), userLogin)
+	// 401 — неверная пара логин/пароль;
+	if errors.Is(err, user.ErrInvalidLoginPasswordCombination) {
+		writer.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	if err != nil {
@@ -81,13 +80,13 @@ func (h handler) userRegister(writer http.ResponseWriter, request *http.Request)
 	}
 }
 
-func decodeUserRegister(body io.ReadCloser) (*entity.UserRegisterJSON, error) {
-	var userRegister entity.UserRegisterJSON
+func decodeUserLogin(body io.ReadCloser) (*entity.UserLoginJSON, error) {
+	var userLogin entity.UserLoginJSON
 
 	decoder := json.NewDecoder(body)
-	err := decoder.Decode(&userRegister)
+	err := decoder.Decode(&userLogin)
 
-	return &userRegister, err
+	return &userLogin, err
 }
 
 func setAuthCookie(w http.ResponseWriter, authToken string, tokenExp time.Duration) {
