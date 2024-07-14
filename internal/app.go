@@ -2,13 +2,13 @@ package server
 
 import (
 	"errors"
+	"github.com/go-chi/chi/v5"
 	orderComposition "github.com/sashaaro/go-musthave-diploma-tpl/internal/composition/order"
 	userComposition "github.com/sashaaro/go-musthave-diploma-tpl/internal/composition/user"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	sql2 "github.com/sashaaro/go-musthave-diploma-tpl/internal/db/sql"
 	jwt2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/jwt"
 	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
-	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
 )

@@ -3,9 +3,9 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/config"
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/domain/entity"
-	logging2 "github.com/GTech1256/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
+	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 )
 
 type Storage interface {

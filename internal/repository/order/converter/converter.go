@@ -1,7 +1,7 @@
 package converter
 
 import (
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
 )
 
 func MetricJSONToMetricCounter(metricJSON *entity.MetricJSON) *entity.MetricCounter {

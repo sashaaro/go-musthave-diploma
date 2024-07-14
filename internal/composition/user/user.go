@@ -2,19 +2,19 @@ package composition
 
 import (
 	"context"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
 	userHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user"
 	userLoginHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/login"
 	userRegisterHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/register"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 
-	userRepository "github.com/GTech1256/go-musthave-diploma-tpl/internal/repository/user"
-	userService "github.com/GTech1256/go-musthave-diploma-tpl/internal/service/user"
-	"github.com/GTech1256/go-musthave-diploma-tpl/pkg/logging"
 	"github.com/go-chi/chi/v5"
+	userRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/user"
+	userService "github.com/sashaaro/go-musthave-diploma-tpl/internal/service/user"
+	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 	"time"
 )
 
