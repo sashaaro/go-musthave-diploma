@@ -3,18 +3,20 @@ package composition
 import (
 	"context"
 	"errors"
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/config"
-	sql2 "github.com/GTech1256/go-musthave-diploma-tpl/internal/db/sql"
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/domain/entity"
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/http"
-	userHandler "github.com/GTech1256/go-musthave-diploma-tpl/internal/http/rest/user"
-	userLoginHandler "github.com/GTech1256/go-musthave-diploma-tpl/internal/http/rest/user/login"
-	userRegisterHandler "github.com/GTech1256/go-musthave-diploma-tpl/internal/http/rest/user/register"
-	userRepository "github.com/GTech1256/go-musthave-diploma-tpl/internal/repository/user"
-	userService "github.com/GTech1256/go-musthave-diploma-tpl/internal/service/user"
-	jwt2 "github.com/GTech1256/go-musthave-diploma-tpl/pkg/jwt"
-	"github.com/GTech1256/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
+	sql2 "github.com/sashaaro/go-musthave-diploma-tpl/internal/db/sql"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
+	userHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user"
+	userLoginHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/login"
+	userRegisterHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/register"
+
 	"github.com/go-chi/chi/v5"
+	userOrdersHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/orders"
+	userRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/user"
+	userService "github.com/sashaaro/go-musthave-diploma-tpl/internal/service/user"
+	jwt2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/jwt"
+	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 	"time"
 )
 
@@ -89,4 +91,7 @@ func (h Handler) Register(router *chi.Mux) {
 
 	handler3 := userLoginHandler.NewHandler(h.logger, h.service, h.jwtClient)
 	handler3.Register(router)
+
+	handler4 := userOrdersHandler.NewHandler(h.logger, h.service, h.jwtClient)
+	handler4.Register(router)
 }
