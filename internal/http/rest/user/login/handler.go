@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
 	http2 "github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http/utils/auth"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/service/user"
 	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 	"io"
@@ -74,7 +75,7 @@ func (h handler) userLogin(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		setAuthCookie(writer, authToken, h.jwtClient.GetTokenExp())
+		auth.SetAuthCookie(writer, authToken, h.jwtClient.GetTokenExp())
 		writer.WriteHeader(http.StatusOK)
 		return
 	}
@@ -87,18 +88,4 @@ func decodeUserLogin(body io.ReadCloser) (*entity.UserLoginJSON, error) {
 	err := decoder.Decode(&userLogin)
 
 	return &userLogin, err
-}
-
-func setAuthCookie(w http.ResponseWriter, authToken string, tokenExp time.Duration) {
-	cookie := http.Cookie{
-		Name:     "at", // accessToken
-		Value:    authToken,
-		Path:     "/",
-		MaxAge:   int(tokenExp),
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	}
-
-	http.SetCookie(w, &cookie)
 }
