@@ -3,7 +3,6 @@ package composition
 import (
 	"context"
 	"errors"
-	"github.com/go-chi/chi/v5"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	sql2 "github.com/sashaaro/go-musthave-diploma-tpl/internal/db/sql"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
@@ -11,6 +10,9 @@ import (
 	userHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user"
 	userLoginHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/login"
 	userRegisterHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/register"
+
+	"github.com/go-chi/chi/v5"
+	userOrdersHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/orders"
 	userRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/user"
 	userService "github.com/sashaaro/go-musthave-diploma-tpl/internal/service/user"
 	jwt2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/jwt"
@@ -89,4 +91,7 @@ func (h Handler) Register(router *chi.Mux) {
 
 	handler3 := userLoginHandler.NewHandler(h.logger, h.service, h.jwtClient)
 	handler3.Register(router)
+
+	handler4 := userOrdersHandler.NewHandler(h.logger, h.service, h.jwtClient)
+	handler4.Register(router)
 }
