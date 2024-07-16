@@ -1,7 +1,7 @@
 package dto
 
 type Order struct {
-	Number int
+	Number string
 }
 
 type OrderResponse struct {

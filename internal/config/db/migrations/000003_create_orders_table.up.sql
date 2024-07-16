@@ -1,6 +1,6 @@
 CREATE TABLE gophermart.orders (
     id SERIAL PRIMARY KEY,
-    number BIGINT NOT NULL,
+    number TEXT NOT NULL,
 -- - `REGISTERED` — заказ зарегистрирован, но вознаграждение не рассчитано;
 -- - `INVALID` — заказ не принят к расчёту, и вознаграждение не будет начислено;
 -- - `PROCESSING` — расчёт начисления в процессе;

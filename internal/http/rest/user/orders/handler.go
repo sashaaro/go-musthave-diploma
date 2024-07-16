@@ -2,10 +2,12 @@ package user
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/domain/entity"
 	http2 "github.com/GTech1256/go-musthave-diploma-tpl/internal/http"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/http/middlware/private_router"
+	"github.com/GTech1256/go-musthave-diploma-tpl/internal/http/utils/auth"
 	user "github.com/GTech1256/go-musthave-diploma-tpl/internal/service/order"
 	logging2 "github.com/GTech1256/go-musthave-diploma-tpl/pkg/logging"
 	"github.com/GTech1256/go-musthave-diploma-tpl/pkg/luhn"
@@ -28,6 +30,7 @@ type UserExister interface {
 
 type Service interface {
 	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
+	GetOrdersStatusJSONs(ctx context.Context, userId int) ([]*entity.OrderStatusJSON, error)
 }
 
 type handler struct {
@@ -47,10 +50,12 @@ func NewHandler(logger logging2.Logger, updateService Service, jwtClient JWTClie
 }
 
 func (h handler) Register(router *chi.Mux) {
-	router.Post("/api/user/orders", privateRouter.WithPrivateRouter(http.HandlerFunc(h.orders), h.logger, h.jwtClient, h.userExister))
+	router.Post("/api/user/orders", privateRouter.WithPrivateRouter(http.HandlerFunc(h.uploadOrder), h.logger, h.jwtClient, h.userExister))
+	router.Get("/api/user/orders", privateRouter.WithPrivateRouter(http.HandlerFunc(h.getOrder), h.logger, h.jwtClient, h.userExister))
+
 }
 
-// orders /api/user/orders
+// uploadOrder /api/user/uploadOrder
 // Возможные коды ответа:
 // - `200` — номер заказа уже был загружен этим пользователем; +
 // - `202` — новый номер заказа принят в обработку; +
@@ -59,7 +64,7 @@ func (h handler) Register(router *chi.Mux) {
 // - `409` — номер заказа уже был загружен другим пользователем; +
 // - `422` — неверный формат номера заказа; +
 // - `500` — внутренняя ошибка сервера. +
-func (h handler) orders(writer http.ResponseWriter, request *http.Request) {
+func (h handler) uploadOrder(writer http.ResponseWriter, request *http.Request) {
 	order, err := decodeOrder(request.Body)
 
 	// `400` — неверный формат запроса;
@@ -75,9 +80,11 @@ func (h handler) orders(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	userId := request.Context().Value("userId").(int)
+	userId := auth.GetUserIdFromContext(request.Context())
 
-	_, err = h.service.Create(request.Context(), userId, (*entity.OrderNumber)(order))
+	orderString := strconv.Itoa(*order)
+
+	_, err = h.service.Create(request.Context(), *userId, (*entity.OrderNumber)(&orderString))
 	if errors.Is(err, user.ErrOrderNumberAlreadyUploadByCurrentUser) {
 		// `200` — номер заказа уже был загружен этим пользователем;
 		writer.WriteHeader(http.StatusOK)
@@ -116,4 +123,43 @@ func decodeOrder(body io.ReadCloser) (*int, error) {
 	}
 
 	return &number, nil
+}
+
+// getOrder Хендлер доступен только авторизованному пользователю.
+// Номера заказа в выдаче должны быть отсортированы по времени загрузки от самых старых к самым новым.
+// Формат даты — RFC3339.
+
+// Возможные коды ответа:
+//   - `200` — успешная обработка запроса.
+//     Формат ответа:
+//     `200 OK HTTP/1.1
+//     Content-Type: application/json`
+//     Body: []*entity.OrderStatusJSON
+//   - `204` — нет данных для ответа.
+//   - `401` — пользователь не авторизован.
+//   - `500` — внутренняя ошибка сервера.
+func (h handler) getOrder(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	userId := auth.GetUserIdFromContext(ctx)
+
+	ordersStatusJSONs, err := h.service.GetOrdersStatusJSONs(ctx, *userId)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if len(ordersStatusJSONs) == 0 {
+		writer.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	statusOrdersEncoded, err := json.Marshal(ordersStatusJSONs)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	writer.Write(statusOrdersEncoded)
+	writer.WriteHeader(http.StatusOK)
 }
