@@ -2,19 +2,29 @@ package user
 
 import (
 	"context"
+	"database/sql"
 	"errors"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/dto"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
-	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"time"
 )
+
+type Accrual interface {
+	SendOrder(ctx context.Context, orderDTO dto.Order) (*dto.OrderResponse, error)
+}
 
 type Storage interface {
 	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
 	GetByOrderNumber(ctx context.Context, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
+	GetOrdersForProcessing(ctx context.Context) ([]*entity.OrderDB, error)
+	Update(ctx context.Context, orderDB *entity.OrderDB) error
 }
 
 type userService struct {
-	logger  logging2.Logger
+	accrual Accrual
+	logger  logging.Logger
 	storage Storage
 	cfg     *config.Config
 }
@@ -24,8 +34,9 @@ var (
 	ErrOrderNumberAlreadyUploadByOtherUser   = errors.New("номер заказа уже был загружен другим пользователем")
 )
 
-func NewOrderService(logger logging2.Logger, storage Storage, cfg *config.Config) *userService {
+func NewOrderService(accrual Accrual, logger logging.Logger, storage Storage, cfg *config.Config) *userService {
 	return &userService{
+		accrual: accrual,
 		logger:  logger,
 		storage: storage,
 		cfg:     cfg,
@@ -51,4 +62,76 @@ func (u userService) Create(ctx context.Context, userId int, orderNumber *entity
 	}
 
 	return orderDB, nil
+}
+
+func (u userService) StartProcessingOrders() {
+	u.logger.Info("[StartProcessingOrders]: Старт")
+	ctx := context.Background()
+
+	ticker := time.NewTicker(time.Second * 5)
+
+	for {
+		select {
+		case <-ticker.C:
+			u.processingOrders(ctx)
+		}
+	}
+}
+
+// processingOrders Условно крон, который забирает все заказы, которые должна быть прогоняты через сервис accurate
+func (u userService) processingOrders(ctx context.Context) {
+	u.logger.Info("[processingOrders]: Получение заказов для обработки")
+	orders, err := u.storage.GetOrdersForProcessing(ctx)
+	if err != nil {
+		u.logger.Error(err)
+		return
+	}
+
+	u.logger.Infof("[processingOrders]: Кол-во заказов: %v", len(orders))
+
+	for _, order := range orders {
+		u.processingOrder(order)
+	}
+}
+
+func (u userService) processingOrder(order *entity.OrderDB) {
+	u.logger.Infof("[processingOrder]: обработка заказа: %+v", order)
+	ctx := context.Background()
+
+	orderDTO := dto.Order{Number: order.Number}
+
+	u.logger.Infof("[processingOrder]: получение данных из accrual по заказу %v", orderDTO)
+	orderResponse, err := u.accrual.SendOrder(ctx, orderDTO)
+	if err != nil {
+		u.logger.Errorf("[processingOrder]: Ошибка получения статуса ордера из сервиса accrual: %v", err)
+		return
+	}
+
+	u.logger.Infof("[processingOrder]: Данные из accrual успешно получены %v", orderResponse)
+
+	if orderResponse.Status != order.Status {
+		newOrderDB := &entity.OrderDB{
+			ID:     order.ID,
+			Number: order.Number,
+			Status: orderResponse.Status,
+			Accrual: sql.NullFloat64{
+				Float64: float64(orderResponse.Accrual),
+				Valid:   true,
+			},
+			UploadedAt: order.UploadedAt,
+			UserId:     order.UserId,
+		}
+
+		u.logger.Infof("[processingOrder]: Обновление заказа в репозитории %v", *newOrderDB)
+
+		err := u.storage.Update(ctx, newOrderDB)
+		if err != nil {
+			u.logger.Errorf("[processingOrder]: Ошибка при обновлении %+v заказа в репозитории: %v", newOrderDB, err)
+			return
+		}
+	} else {
+		u.logger.Infof("[processingOrder]: заказ не обновлен, статус остался таким же %v == %v", orderResponse.Status, order.Status)
+	}
+
+	u.logger.Infof("[processingOrder]: Заказ обработан: %+v", order)
 }

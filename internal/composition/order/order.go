@@ -2,9 +2,7 @@ package composition
 
 import (
 	"context"
-	"github.com/go-chi/chi/v5"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
@@ -12,6 +10,9 @@ import (
 	orderRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/order"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/service/order"
 	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"time"
 )
 
@@ -35,6 +36,7 @@ type DB interface {
 
 type Service interface {
 	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
+	StartProcessingOrders()
 }
 
 type UserService interface {
@@ -43,17 +45,19 @@ type UserService interface {
 
 type UsersComposite struct {
 	Handler http.Handler
+	Service Service
 }
 
 func NewOrderComposite(cfg *config.Config, logger logging.Logger, db DB, jwtClient JWTClient, userService UserService) (*UsersComposite, error) {
 	storage := orderRepository.NewStorage(db, logger)
-
-	service := user.NewOrderService(logger, storage, cfg)
+	accrualClient := accrual.New(*cfg.AccrualSystemAddress, logger)
+	service := user.NewOrderService(accrualClient, logger, storage, cfg)
 
 	handler := newHandler(logger, service, jwtClient, userService)
 
 	return &UsersComposite{
 		Handler: handler,
+		Service: service,
 	}, nil
 }
 
