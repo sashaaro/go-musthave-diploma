@@ -7,6 +7,7 @@ import (
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/dto"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/orders/converter"
 	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 	"time"
 )
@@ -20,6 +21,7 @@ type Storage interface {
 	GetByOrderNumber(ctx context.Context, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
 	GetOrdersForProcessing(ctx context.Context) ([]*entity.OrderDB, error)
 	Update(ctx context.Context, orderDB *entity.OrderDB) error
+	GetOrdersByUserId(ctx context.Context, userId int) ([]*entity.OrderDB, error)
 }
 
 type userService struct {
@@ -134,4 +136,15 @@ func (u userService) processingOrder(order *entity.OrderDB) {
 	}
 
 	u.logger.Infof("[processingOrder]: Заказ обработан: %+v", order)
+}
+
+func (u userService) GetOrdersStatusJSONs(ctx context.Context, userId int) ([]*entity.OrderStatusJSON, error) {
+	orders, err := u.storage.GetOrdersByUserId(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	ordersStatusJSONs := converter.GetOrdersStatusJSONsByOrderDBs(orders)
+
+	return ordersStatusJSONs, nil
 }
