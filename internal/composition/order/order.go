@@ -37,6 +37,7 @@ type DB interface {
 type Service interface {
 	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
 	StartProcessingOrders()
+	GetOrdersStatusJSONs(ctx context.Context, userId int) ([]*entity.OrderStatusJSON, error)
 }
 
 type UserService interface {
