@@ -12,7 +12,7 @@ tmp_dir = "tmp"
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = "KEY=\"tmp/KNKB8\" STORE_INTERVAL=0 FILE_STORAGE_PATH=\"\" DATABASE_URI=\"postgres://postgres:postgres@localhost:5432/yandex_metrics?sslmode=disable\" ./tmp/main"
+  full_bin = "RUN_ADDRESS=\":8081\" ACCRUAL_SYSTEM_ADDRESS=\"http://localhost:8080\" DATABASE_URI=\"postgres://postgres:postgres@localhost:5432/yandex_metrics?sslmode=disable\" ./tmp/main"
 #  full_bin = "STORE_INTERVAL=0 FILE_STORAGE_PATH=\"\" ./tmp/main"
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]

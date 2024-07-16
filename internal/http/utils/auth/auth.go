@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/config"
+	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	"net/http"
 	"time"
 )
