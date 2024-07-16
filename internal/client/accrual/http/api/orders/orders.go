@@ -3,8 +3,6 @@ package orders
 import (
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/http/client"
 	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
-	//"github.com/GTech1256/go-yandex-metrics-tpl/internal/agent/client/server/http/client"
-	//"github.com/GTech1256/go-yandex-metrics-tpl/pkg/logging"
 )
 
 type update struct {

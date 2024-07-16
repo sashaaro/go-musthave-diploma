@@ -3,10 +3,11 @@ package sql
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"fmt"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
 	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
@@ -38,6 +39,7 @@ func NewStorage(db DB, logger logging.Logger) *storage {
 
 func (s *storage) Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error) {
 	var orderDB entity.OrderDB
+	fmt.Println(1)
 	err := s.db.QueryRow(
 		ctx,
 		"INSERT INTO gophermart.orders (number, status, user_id) values ($1, $2, $3) RETURNING id, number, status, accrual, uploaded_at, user_id",
@@ -46,11 +48,13 @@ func (s *storage) Create(ctx context.Context, userId int, orderNumber *entity.Or
 		userId,
 	).Scan(&orderDB.ID, &orderDB.Number, &orderDB.Status, &orderDB.Accrual, &orderDB.UploadedAt, &orderDB.UserId)
 
+	fmt.Println(2)
 	if err != nil {
 		s.logger.Error(err)
 		return nil, err
 	}
 
+	fmt.Println(3)
 	return &orderDB, nil
 }
 
@@ -138,4 +142,34 @@ func (s *storage) Update(ctx context.Context, orderDB *entity.OrderDB) error {
 	}
 
 	return nil
+}
+
+func (s *storage) GetOrdersByUserId(ctx context.Context, userId int) ([]*entity.OrderDB, error) {
+	orderDBs := make([]*entity.OrderDB, 0)
+
+	row, err := s.db.Query(
+		ctx,
+		"SELECT id, number, status, accrual, uploaded_at, user_id FROM gophermart.orders WHERE user_id = $1",
+		userId,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return orderDBs, nil
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
+	for row.Next() {
+		var orderDB entity.OrderDB
+		err := row.Scan(&orderDB.ID, &orderDB.Number, &orderDB.Status, &orderDB.Accrual, &orderDB.UploadedAt, &orderDB.UserId)
+		if err != nil {
+			s.logger.Error(err)
+			continue
+		}
+
+		orderDBs = append(orderDBs, &orderDB)
+	}
+
+	return orderDBs, nil
 }
