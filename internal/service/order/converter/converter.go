@@ -2,7 +2,7 @@ package converter
 
 import (
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/domain/entity"
-	updateInterface "github.com/GTech1256/go-musthave-diploma-tpl/internal/http/rest/update/interface"
+	updateInterface "github.com/GTech1256/go-musthave-diploma-tpl/internal/http/rest/orders/interface"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/repository/user/file"
 	"strconv"
 )

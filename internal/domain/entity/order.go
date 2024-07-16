@@ -9,9 +9,9 @@ type OrderNumber int
 
 type OrderDB struct {
 	ID         int
-	Number     string
+	Number     int
 	Status     string
-	Accrual    sql.NullInt32
+	Accrual    sql.NullFloat64
 	UploadedAt pgtype.Timestamp
 	UserId     int
 }

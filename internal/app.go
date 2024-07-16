@@ -6,6 +6,7 @@ import (
 	userComposition "github.com/GTech1256/go-musthave-diploma-tpl/internal/composition/user"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/config"
 	sql2 "github.com/GTech1256/go-musthave-diploma-tpl/internal/db/sql"
+	"github.com/GTech1256/go-musthave-diploma-tpl/internal/http/middlware/logging"
 	jwt2 "github.com/GTech1256/go-musthave-diploma-tpl/pkg/jwt"
 	logging2 "github.com/GTech1256/go-musthave-diploma-tpl/pkg/logging"
 	"github.com/go-chi/chi/v5"
@@ -43,24 +44,29 @@ func New(cfg *config.Config, logger logging2.Logger) (*App, error) {
 	logger.Info("Регистрация /user Роутов")
 	userComposite.Handler.Register(router)
 
-	logger.Info("Создание userComposite")
+	logger.Info("Создание orderComposite")
 	orderComposite, err := orderComposition.NewOrderComposite(cfg, logger, sql.DB, jwtClient, userComposite.Service)
 	if err != nil {
-		logger.Fatalf("Ошибка создания userComposite %v", err)
+		logger.Fatalf("Ошибка создания orderComposite %v", err)
 		return nil, err
 	}
 
+	logger.Info("Запуск ProcessingOrders")
+	go func() {
+		orderComposite.Service.StartProcessingOrders()
+	}()
+
 	logger.Info("Регистрация /user/order Роутов")
 	orderComposite.Handler.Register(router)
-
-	logger.Infof("Start Listen Port %v", *cfg.Port)
-	log.Fatal(http.ListenAndServe(*cfg.Port, router))
 
 	app := &App{
 		logger: logger,
 		router: router,
 		cfg:    cfg,
 	}
+
+	logger.Infof("Start Listen Port %v", *cfg.Port)
+	log.Fatal(http.ListenAndServe(*cfg.Port, logging.WithLogging(router, logger)))
 
 	return app, nil
 }

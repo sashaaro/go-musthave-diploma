@@ -26,8 +26,7 @@ type DB interface {
 }
 
 var (
-	ErrNotUniqueLogin                  = errors.New("пользователь с таким логином уже зарегистрирован")
-	ErrInvalidLoginPasswordCombination = errors.New("неверная пара логин/пароль")
+	ErrNoRowsForUpdate = errors.New("нет записей для обновления")
 )
 
 func NewStorage(db DB, logger logging.Logger) *storage {
@@ -91,4 +90,52 @@ func (s *storage) GetByOrderNumber(ctx context.Context, orderNumber *entity.Orde
 	}
 
 	return &orderDB, nil
+}
+
+func (s *storage) GetOrdersForProcessing(ctx context.Context) ([]*entity.OrderDB, error) {
+	orderDBs := make([]*entity.OrderDB, 0)
+
+	row, err := s.db.Query(
+		ctx,
+		"SELECT id, number, status, accrual, uploaded_at, user_id FROM gophermart.orders WHERE status IN ('REGISTERED', 'PROCESSING')",
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return orderDBs, nil
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
+	for row.Next() {
+		var orderDB entity.OrderDB
+		err := row.Scan(&orderDB.ID, &orderDB.Number, &orderDB.Status, &orderDB.Accrual, &orderDB.UploadedAt, &orderDB.UserId)
+		if err != nil {
+			s.logger.Error(err)
+			continue
+		}
+
+		orderDBs = append(orderDBs, &orderDB)
+	}
+
+	return orderDBs, nil
+}
+
+func (s *storage) Update(ctx context.Context, orderDB *entity.OrderDB) error {
+	_, err := s.db.Exec(
+		ctx,
+		"UPDATE gophermart.orders SET status=$2, accrual=$3 WHERE id = $1",
+		orderDB.ID,
+		orderDB.Status,
+		orderDB.Accrual,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return ErrNoRowsForUpdate
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return err
+	}
+
+	return nil
 }
