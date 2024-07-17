@@ -31,7 +31,7 @@ func NewJwt(tokenExp time.Duration, secretKey string) *JWTClient {
 }
 
 // BuildJWTString создаёт токен и возвращает его в виде строки.
-func (jwtClient *JWTClient) BuildJWTString(userId int) (string, error) {
+func (jwtClient *JWTClient) BuildJWTString(userID int) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждениями — Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -39,7 +39,7 @@ func (jwtClient *JWTClient) BuildJWTString(userId int) (string, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(jwtClient.tokenExp)),
 		},
 		// собственное утверждение
-		UserID: userId,
+		UserID: userID,
 	})
 
 	// создаём строку токена
