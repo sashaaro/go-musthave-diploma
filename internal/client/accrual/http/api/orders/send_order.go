@@ -8,6 +8,7 @@ import (
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/client/accrual/http/api"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/client/accrual/http/api/orders/converter"
 	"net/http"
+	"strconv"
 )
 
 var (
@@ -16,6 +17,24 @@ var (
 	ErrStatusTooManyRequests        = errors.New("превышено количество запросов к сервису")
 	ErrStatusInternalServerError    = errors.New("внутренняя ошибка сервера")
 )
+
+type TooManyRequestsError struct {
+	RetryAfter uint
+	Err        error
+}
+
+// Error добавляет поддержку интерфейса error для типа TimeError.
+func (te *TooManyRequestsError) Error() string {
+	return fmt.Sprintf("%v %v", te.RetryAfter, te.Err)
+}
+
+// NewTooManyRequestsError записывает ошибку err в тип TimeError c текущим временем.
+func NewTooManyRequestsError(err error, retryAfter uint) error {
+	return &TooManyRequestsError{
+		RetryAfter: retryAfter,
+		Err:        err,
+	}
+}
 
 func (s update) SendOrder(ctx context.Context, orderDTO dto.Order) (*dto.OrderResponse, error) {
 	requestURL := getRequestURL(s.BaseURL, &orderDTO)
@@ -58,8 +77,11 @@ func getResponse(response *http.Response) (*dto.OrderResponse, error) {
 		return nil, ErrUnknownOrderNumberForAccrual
 
 	case http.StatusTooManyRequests:
-		// TODO: Обернуть ошибку в другую, чтобы добавить поле Retry-After: N
-		return nil, ErrStatusTooManyRequests
+		atoi, err := strconv.Atoi(response.Header.Get("Retry-After"))
+		if err != nil {
+			return nil, NewTooManyRequestsError(ErrStatusTooManyRequests, 60)
+		}
+		return nil, NewTooManyRequestsError(ErrStatusTooManyRequests, uint(atoi))
 
 	case http.StatusInternalServerError:
 		return nil, ErrStatusInternalServerError
