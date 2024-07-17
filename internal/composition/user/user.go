@@ -88,15 +88,15 @@ func newUserHandler(logger logging.Logger, service Service, jwtClient JWTClient,
 }
 
 func (h UserHandler) Register(router *chi.Mux) {
-	handler1 := userHandler.NewHandler(h.logger, h.service)
-	handler1.Register(router)
+	userHandlerInstance := userHandler.NewHandler(h.logger, h.service)
+	userHandlerInstance.Register(router)
 
-	handler2 := userRegisterHandler.NewHandler(h.logger, h.service, h.jwtClient)
-	handler2.Register(router)
+	userRegisterHandlerInstance := userRegisterHandler.NewHandler(h.logger, h.service, h.jwtClient)
+	userRegisterHandlerInstance.Register(router)
 
-	handler3 := userLoginHandler.NewHandler(h.logger, h.service, h.jwtClient)
-	handler3.Register(router)
+	userLoginHandlerInstance := userLoginHandler.NewHandler(h.logger, h.service, h.jwtClient)
+	userLoginHandlerInstance.Register(router)
 
-	handler4 := userBalanceHandler.NewHandler(h.logger, h.service, h.jwtClient, h.userExister)
-	handler4.Register(router)
+	userBalanceHandlerInstance := userBalanceHandler.NewHandler(h.logger, h.service, h.jwtClient, h.userExister)
+	userBalanceHandlerInstance.Register(router)
 }
