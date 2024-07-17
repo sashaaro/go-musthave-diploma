@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
+	privateRouter "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/middlware/private_router"
 	"log"
 	"net/http"
 	"time"
@@ -11,7 +12,7 @@ import (
 func SetAuthCookie(w http.ResponseWriter, authToken string, tokenExp time.Duration) {
 	//tokenExp = tokenExp
 	cookie := http.Cookie{
-		Name:  config.AUTH_COOKIE, // accessToken
+		Name:  config.AuthCookie, // accessToken
 		Value: authToken,
 		Path:  "/",
 		//MaxAge:   int(tokenExp),
@@ -23,12 +24,12 @@ func SetAuthCookie(w http.ResponseWriter, authToken string, tokenExp time.Durati
 	http.SetCookie(w, &cookie)
 }
 
-func GetUserIdFromContext(ctx context.Context) *int {
-	userIdAny, ok := ctx.Value("userId").(int)
+func GetUserIDFromContext(ctx context.Context) *int {
+	userIDAny, ok := ctx.Value(privateRouter.KeyUserID).(int)
 	if ok {
-		return &userIdAny
+		return &userIDAny
 	}
 
-	log.Fatalln("нет userId")
+	log.Fatalln("нет userID")
 	return nil
 }

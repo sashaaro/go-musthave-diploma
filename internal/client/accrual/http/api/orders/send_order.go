@@ -28,7 +28,6 @@ func (s update) SendOrder(ctx context.Context, orderDTO dto.Order) (*dto.OrderRe
 
 	res, err := http.DefaultClient.Do(req) // s.HTTPClient.Do(req)
 	if err != nil {
-		fmt.Println(err)
 		s.logger.Errorf("[accrual]: SendOrder Ошибка отправки запроса: %v", err)
 
 		return nil, api.ErrRequestDo
