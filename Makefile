@@ -26,7 +26,7 @@ test-autotests: build
 	autotests/metricstest-darwin-arm64 -test.v -test.run=^TestIteration1$$ -binary-path=cmd/server/server
 
 db-migration-create:
-	migrate create -ext sql -dir db/migrations -seq create_users_table
+	migrate create -ext sql -dir internal/config/db/migrations -seq create_users_table
 
 db-migration-up:
 	export POSTGRESQL_URL="postgres://postgres:postgres@localhost:5432/yandex_metrics?sslmode=disable"

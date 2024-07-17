@@ -1,4 +1,4 @@
-package user
+package order
 
 import (
 	"context"
@@ -24,11 +24,16 @@ type Storage interface {
 	GetOrdersByUserId(ctx context.Context, userId int) ([]*entity.OrderDB, error)
 }
 
+type UserStorage interface {
+	IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error)
+}
+
 type userService struct {
-	accrual Accrual
-	logger  logging.Logger
-	storage Storage
-	cfg     *config.Config
+	accrual     Accrual
+	logger      logging.Logger
+	storage     Storage
+	userStorage UserStorage
+	cfg         *config.Config
 }
 
 var (
@@ -36,12 +41,13 @@ var (
 	ErrOrderNumberAlreadyUploadByOtherUser   = errors.New("номер заказа уже был загружен другим пользователем")
 )
 
-func NewOrderService(accrual Accrual, logger logging.Logger, storage Storage, cfg *config.Config) *userService {
+func NewOrderService(accrual Accrual, logger logging.Logger, storage Storage, cfg *config.Config, userStorage UserStorage) *userService {
 	return &userService{
-		accrual: accrual,
-		logger:  logger,
-		storage: storage,
-		cfg:     cfg,
+		accrual:     accrual,
+		logger:      logger,
+		storage:     storage,
+		cfg:         cfg,
+		userStorage: userStorage,
 	}
 }
 
@@ -129,6 +135,11 @@ func (u userService) processingOrder(order *entity.OrderDB) {
 		err := u.storage.Update(ctx, newOrderDB)
 		if err != nil {
 			u.logger.Errorf("[processingOrder]: Ошибка при обновлении %+v заказа в репозитории: %v", newOrderDB, err)
+			return
+		}
+		_, err = u.userStorage.IncrementBalance(ctx, newOrderDB.UserId, newOrderDB.Accrual.Float64)
+		if err != nil {
+			u.logger.Errorf("[processingOrder]: Ошибка при увеличении баланса пользователя %v", newOrderDB.UserId)
 			return
 		}
 	} else {
