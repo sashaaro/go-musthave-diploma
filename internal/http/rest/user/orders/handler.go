@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/domain/entity"
 	http2 "github.com/GTech1256/go-musthave-diploma-tpl/internal/http"
-	"github.com/GTech1256/go-musthave-diploma-tpl/internal/http/middlware/private_router"
+	privaterouter "github.com/GTech1256/go-musthave-diploma-tpl/internal/http/middlware/private_router"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/http/utils/auth"
 	user "github.com/GTech1256/go-musthave-diploma-tpl/internal/service/order"
 	logging2 "github.com/GTech1256/go-musthave-diploma-tpl/pkg/logging"
@@ -19,18 +19,18 @@ import (
 )
 
 type JWTClient interface {
-	BuildJWTString(userId int) (string, error)
+	BuildJWTString(userID int) (string, error)
 	GetTokenExp() time.Duration
 	GetUserID(tokenString string) (int, error)
 }
 
 type UserExister interface {
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
 }
 
 type Service interface {
-	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
-	GetOrdersStatusJSONs(ctx context.Context, userId int) ([]*entity.OrderStatusJSON, error)
+	Create(ctx context.Context, userID int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
+	GetOrdersStatusJSONs(ctx context.Context, userID int) ([]*entity.OrderStatusJSON, error)
 }
 
 type handler struct {
@@ -50,8 +50,8 @@ func NewHandler(logger logging2.Logger, updateService Service, jwtClient JWTClie
 }
 
 func (h handler) Register(router *chi.Mux) {
-	router.Post("/api/user/orders", privateRouter.WithPrivateRouter(http.HandlerFunc(h.uploadOrder), h.logger, h.jwtClient, h.userExister))
-	router.Get("/api/user/orders", privateRouter.WithPrivateRouter(http.HandlerFunc(h.getOrder), h.logger, h.jwtClient, h.userExister))
+	router.Post("/api/user/orders", privaterouter.WithPrivateRouter(http.HandlerFunc(h.uploadOrder), h.logger, h.jwtClient, h.userExister))
+	router.Get("/api/user/orders", privaterouter.WithPrivateRouter(http.HandlerFunc(h.getOrder), h.logger, h.jwtClient, h.userExister))
 
 }
 
@@ -80,11 +80,11 @@ func (h handler) uploadOrder(writer http.ResponseWriter, request *http.Request) 
 		return
 	}
 
-	userId := auth.GetUserIdFromContext(request.Context())
+	userID := auth.GetUserIDFromContext(request.Context())
 
 	orderString := strconv.Itoa(*order)
 
-	_, err = h.service.Create(request.Context(), *userId, (*entity.OrderNumber)(&orderString))
+	_, err = h.service.Create(request.Context(), *userID, (*entity.OrderNumber)(&orderString))
 	if errors.Is(err, user.ErrOrderNumberAlreadyUploadByCurrentUser) {
 		// `200` — номер заказа уже был загружен этим пользователем;
 		writer.WriteHeader(http.StatusOK)
@@ -140,9 +140,9 @@ func decodeOrder(body io.ReadCloser) (*int, error) {
 //   - `500` — внутренняя ошибка сервера.
 func (h handler) getOrder(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	userId := auth.GetUserIdFromContext(ctx)
+	userID := auth.GetUserIDFromContext(ctx)
 
-	ordersStatusJSONs, err := h.service.GetOrdersStatusJSONs(ctx, *userId)
+	ordersStatusJSONs, err := h.service.GetOrdersStatusJSONs(ctx, *userID)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return
@@ -160,6 +160,6 @@ func (h handler) getOrder(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
-	writer.Write(statusOrdersEncoded)
 	writer.WriteHeader(http.StatusOK)
+	writer.Write(statusOrdersEncoded)
 }

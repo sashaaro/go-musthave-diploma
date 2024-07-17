@@ -17,13 +17,13 @@ import (
 )
 
 type JWTClient interface {
-	BuildJWTString(userId int) (string, error)
+	BuildJWTString(userID int) (string, error)
 	GetUserID(tokenString string) (int, error)
 	GetTokenExp() time.Duration
 }
 
 type UserExister interface {
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
 }
 
 type DB interface {
@@ -35,17 +35,17 @@ type DB interface {
 }
 
 type Service interface {
-	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
+	Create(ctx context.Context, userID int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
 	StartProcessingOrders()
-	GetOrdersStatusJSONs(ctx context.Context, userId int) ([]*entity.OrderStatusJSON, error)
+	GetOrdersStatusJSONs(ctx context.Context, userID int) ([]*entity.OrderStatusJSON, error)
 }
 
 type UserService interface {
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
 }
 
 type UserStorage interface {
-	IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error)
+	IncrementBalance(ctx context.Context, userID int, incValue float64) (*entity.UserDB, error)
 }
 
 type UsersComposite struct {

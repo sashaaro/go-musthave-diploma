@@ -1,4 +1,4 @@
-package privateRouter
+package privaterouter
 
 import (
 	"context"
@@ -8,17 +8,24 @@ import (
 )
 
 type UserExister interface {
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
 }
 
 type JWTClient interface {
 	GetUserID(tokenString string) (int, error)
 }
 
+type key int
+
+const (
+	KeyUserID key = iota
+	// ...
+)
+
 func WithPrivateRouter(h http.Handler, logger logging2.Logger, jwtClient JWTClient, userExister UserExister) http.HandlerFunc {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-		atCookie, err := r.Cookie(config.AUTH_COOKIE)
+		atCookie, err := r.Cookie(config.AuthCookie)
 		if err != nil {
 			logger.Errorf("Ошибка получения куки авторизации %v", err)
 			w.WriteHeader(http.StatusUnauthorized)
@@ -37,7 +44,7 @@ func WithPrivateRouter(h http.Handler, logger logging2.Logger, jwtClient JWTClie
 			return
 		}
 
-		isUserExist, err := userExister.GetIsUserExistById(ctx, id)
+		isUserExist, err := userExister.GetIsUserExistByIВ(ctx, id)
 		if err != nil {
 			logger.Errorf("Произошла ошибка при получении пользователя с id %v БД: %v", id, err)
 			w.WriteHeader(http.StatusUnauthorized)
@@ -49,7 +56,7 @@ func WithPrivateRouter(h http.Handler, logger logging2.Logger, jwtClient JWTClie
 			return
 		}
 
-		ctx = context.WithValue(ctx, "userId", id)
+		ctx = context.WithValue(ctx, KeyUserID, id)
 
 		r = r.WithContext(ctx)
 

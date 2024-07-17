@@ -20,13 +20,13 @@ import (
 )
 
 type JWTClient interface {
-	BuildJWTString(userId int) (string, error)
+	BuildJWTString(userID int) (string, error)
 	GetUserID(tokenString string) (int, error)
 	GetTokenExp() time.Duration
 }
 
 type UserExister interface {
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
 }
 
 type DB interface {
@@ -41,13 +41,14 @@ type Service interface {
 	Ping(ctx context.Context) error
 	Register(ctx context.Context, userRegister *entity.UserRegisterJSON) (*entity.UserDB, error)
 	Login(ctx context.Context, userRegister *entity.UserLoginJSON) (*entity.UserDB, error)
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
-	GetById(ctx context.Context, userId int) (*entity.UserDB, error)
-	Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
+	GetByID(ctx context.Context, userID int) (*entity.UserDB, error)
+	Withdraw(ctx context.Context, withdrawalRawRecord entity.WithdrawalRawRecord) (*entity.UserDB, error)
+	GetWithdrawals(ctx context.Context, userID int) ([]*entity.WithdrawalDB, error)
 }
 
 type Storage interface {
-	IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error)
+	IncrementBalance(ctx context.Context, userID int, incValue float64) (*entity.UserDB, error)
 }
 
 type UsersComposite struct {

@@ -13,7 +13,6 @@ func ResponseBodyToOrderDTO(body *io.ReadCloser) (*dto.OrderResponse, error) {
 
 	err := decoder.Decode(&order)
 	if err != nil {
-		//fmt.Println()
 		return nil, err
 	}
 

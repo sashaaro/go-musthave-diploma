@@ -33,9 +33,9 @@ func (h handler) Ping(writer http.ResponseWriter, request *http.Request) {
 	err := h.service.Ping(request.Context())
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
-		_, err = writer.Write([]byte(err.Error()))
+		writer.Write([]byte(err.Error()))
 	} else {
 		writer.WriteHeader(http.StatusOK)
-		_, err = writer.Write([]byte("ok"))
+		writer.Write([]byte("ok"))
 	}
 }

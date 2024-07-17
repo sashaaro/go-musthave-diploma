@@ -13,7 +13,7 @@ type OrderDB struct {
 	Status     string
 	Accrual    sql.NullFloat64
 	UploadedAt pgtype.Timestamp
-	UserId     int
+	UserID     int
 }
 
 type OrderStatusJSON struct {

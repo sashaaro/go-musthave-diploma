@@ -28,7 +28,7 @@ type DB interface {
 var (
 	ErrNotUniqueLogin                      = errors.New("пользователь с таким логином уже зарегистрирован")
 	ErrInvalidLoginPasswordCombination     = errors.New("неверная пара логин/пароль")
-	ErrWithdrawCountGreaterThanUserBalance = errors.New("Запрошенная сумма вывода больше, чем баланс пользователя")
+	ErrWithdrawCountGreaterThanUserBalance = errors.New("запрошенная сумма вывода больше, чем баланс пользователя")
 )
 
 func NewStorage(db DB, logger logging.Logger) *storage {
@@ -86,13 +86,13 @@ func (s *storage) Login(ctx context.Context, userRegister *entity.UserLoginJSON)
 	return &userDB, nil
 }
 
-func (s *storage) GetById(ctx context.Context, userId int) (*entity.UserDB, error) {
+func (s *storage) GetByID(ctx context.Context, userID int) (*entity.UserDB, error) {
 	var userDB entity.UserDB
 
 	err := s.db.QueryRow(
 		ctx,
 		"SELECT id, login, password, wallet, withdrawn FROM gophermart.users WHERE id = $1",
-		userId,
+		userID,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -105,13 +105,13 @@ func (s *storage) GetById(ctx context.Context, userId int) (*entity.UserDB, erro
 	return &userDB, nil
 }
 
-func (s *storage) Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error) {
+func (s *storage) Withdraw(ctx context.Context, userID int, withdrawCount float64) (*entity.UserDB, error) {
 	var userDB entity.UserDB
 
 	err := s.db.QueryRow(
 		ctx,
 		"SELECT id, login, password, wallet, withdrawn FROM gophermart.users WHERE id = $1",
-		userId,
+		userID,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -128,7 +128,7 @@ func (s *storage) Withdraw(ctx context.Context, userId int, withdrawCount float6
 	err = s.db.QueryRow(
 		ctx,
 		"UPDATE gophermart.users SET wallet=$2, withdrawn=$3 WHERE id = $1 RETURNING wallet, withdrawn",
-		userId,
+		userID,
 		userDB.Wallet-withdrawCount,
 		userDB.Withdrawn+withdrawCount,
 	).Scan(&userDB.Wallet, &userDB.Withdrawn)
@@ -139,13 +139,29 @@ func (s *storage) Withdraw(ctx context.Context, userId int, withdrawCount float6
 	return &userDB, nil
 }
 
-func (s *storage) IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error) {
+func (s *storage) AddWithdrawRecord(ctx context.Context, withdrawalRawRecord entity.WithdrawalRawRecord) error {
+	_, err := s.db.Exec(
+		ctx,
+		"INSERT INTO gophermart.withdrawals (\"order\", sum, user_id) VALUES ($1, $2, $3)",
+		withdrawalRawRecord.Order,
+		withdrawalRawRecord.Sum,
+		withdrawalRawRecord.UserID,
+	)
+	if err != nil {
+		s.logger.Error(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *storage) IncrementBalance(ctx context.Context, userID int, incValue float64) (*entity.UserDB, error) {
 	var userDB entity.UserDB
 
 	err := s.db.QueryRow(
 		ctx,
 		"UPDATE gophermart.users SET wallet = wallet + $2 WHERE id = $1 RETURNING id, login, password, wallet, withdrawn",
-		userId,
+		userID,
 		incValue,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -157,4 +173,34 @@ func (s *storage) IncrementBalance(ctx context.Context, userId int, incValue flo
 	}
 
 	return &userDB, nil
+}
+
+func (s *storage) GetWithdrawals(ctx context.Context, userID int) ([]*entity.WithdrawalDB, error) {
+	orderDBs := make([]*entity.WithdrawalDB, 0)
+
+	row, err := s.db.Query(
+		ctx,
+		"SELECT id, \"order\", sum, processed_at, user_id  FROM gophermart.withdrawals WHERE user_id = $1",
+		userID,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return orderDBs, nil
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
+	for row.Next() {
+		var orderDB entity.WithdrawalDB
+		err := row.Scan(&orderDB.ID, &orderDB.Order, &orderDB.Sum, &orderDB.ProcessedAt, &orderDB.UserID)
+		if err != nil {
+			s.logger.Error(err)
+			continue
+		}
+
+		orderDBs = append(orderDBs, &orderDB)
+	}
+
+	return orderDBs, nil
 }
