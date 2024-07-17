@@ -83,6 +83,6 @@ func newHandler(logger logging.Logger, service Service, jwtClient JWTClient, use
 }
 
 func (h Handler) Register(router *chi.Mux) {
-	handler1 := userOrdersHandler.NewHandler(h.logger, h.service, h.jwtClient, h.userExister)
-	handler1.Register(router)
+	userOrdersHandlerInstance := userOrdersHandler.NewHandler(h.logger, h.service, h.jwtClient, h.userExister)
+	userOrdersHandlerInstance.Register(router)
 }
