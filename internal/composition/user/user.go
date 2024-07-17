@@ -2,19 +2,20 @@ package composition
 
 import (
 	"context"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
 	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
 	userHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user"
+	userBalanceHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/balance"
 	userLoginHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/login"
 	userRegisterHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/register"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 
-	"github.com/go-chi/chi/v5"
 	userRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/user"
 	userService "github.com/sashaaro/go-musthave-diploma-tpl/internal/service/user"
 	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/go-chi/chi/v5"
 	"time"
 )
 
@@ -22,6 +23,10 @@ type JWTClient interface {
 	BuildJWTString(userId int) (string, error)
 	GetUserID(tokenString string) (int, error)
 	GetTokenExp() time.Duration
+}
+
+type UserExister interface {
+	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
 }
 
 type DB interface {
@@ -37,10 +42,17 @@ type Service interface {
 	Register(ctx context.Context, userRegister *entity.UserRegisterJSON) (*entity.UserDB, error)
 	Login(ctx context.Context, userRegister *entity.UserLoginJSON) (*entity.UserDB, error)
 	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetById(ctx context.Context, userId int) (*entity.UserDB, error)
+	Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error)
+}
+
+type Storage interface {
+	IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error)
 }
 
 type UsersComposite struct {
 	Service Service
+	Storage Storage
 	Handler http.Handler
 }
 
@@ -49,25 +61,28 @@ func NewUserComposite(cfg *config.Config, logger logging.Logger, db DB, jwtClien
 
 	service := userService.NewUserService(logger, storage, cfg)
 
-	handler := newUserHandler(logger, service, jwtClient)
+	handler := newUserHandler(logger, service, jwtClient, service)
 
 	return &UsersComposite{
 		Service: service,
+		Storage: storage,
 		Handler: handler,
 	}, nil
 }
 
 type UserHandler struct {
-	logger    logging.Logger
-	service   Service
-	jwtClient JWTClient
+	logger      logging.Logger
+	service     Service
+	jwtClient   JWTClient
+	userExister UserExister
 }
 
-func newUserHandler(logger logging.Logger, service Service, jwtClient JWTClient) http.Handler {
+func newUserHandler(logger logging.Logger, service Service, jwtClient JWTClient, userExister UserExister) http.Handler {
 	return &UserHandler{
-		logger:    logger,
-		service:   service,
-		jwtClient: jwtClient,
+		logger:      logger,
+		service:     service,
+		jwtClient:   jwtClient,
+		userExister: userExister,
 	}
 }
 
@@ -80,4 +95,7 @@ func (h UserHandler) Register(router *chi.Mux) {
 
 	handler3 := userLoginHandler.NewHandler(h.logger, h.service, h.jwtClient)
 	handler3.Register(router)
+
+	handler4 := userBalanceHandler.NewHandler(h.logger, h.service, h.jwtClient, h.userExister)
+	handler4.Register(router)
 }
