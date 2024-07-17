@@ -2,20 +2,20 @@ package composition
 
 import (
 	"context"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
-	userHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user"
-	userBalanceHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/balance"
-	userLoginHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/login"
-	userRegisterHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/register"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/sashaaro/go-musthave-diploma/internal/config"
+	"github.com/sashaaro/go-musthave-diploma/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma/internal/http"
+	userHandler "github.com/sashaaro/go-musthave-diploma/internal/http/rest/user"
+	userBalanceHandler "github.com/sashaaro/go-musthave-diploma/internal/http/rest/user/balance"
+	userLoginHandler "github.com/sashaaro/go-musthave-diploma/internal/http/rest/user/login"
+	userRegisterHandler "github.com/sashaaro/go-musthave-diploma/internal/http/rest/user/register"
 
-	userRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/user"
-	userService "github.com/sashaaro/go-musthave-diploma-tpl/internal/service/user"
-	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 	"github.com/go-chi/chi/v5"
+	userRepository "github.com/sashaaro/go-musthave-diploma/internal/repository/user"
+	userService "github.com/sashaaro/go-musthave-diploma/internal/service/user"
+	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"time"
 )
 

@@ -2,8 +2,8 @@ package auth
 
 import (
 	"context"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
-	privateRouter "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/middlware/private_router"
+	"github.com/sashaaro/go-musthave-diploma/internal/config"
+	privateRouter "github.com/sashaaro/go-musthave-diploma/internal/http/middlware/private_router"
 	"log"
 	"net/http"
 	"time"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	server "github.com/sashaaro/go-musthave-diploma-tpl/internal"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
-	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	server "github.com/sashaaro/go-musthave-diploma/internal"
+	"github.com/sashaaro/go-musthave-diploma/internal/config"
+	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"log"
 )
 

@@ -2,7 +2,7 @@ package converter
 
 import (
 	"encoding/json"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/dto"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual/dto"
 	"io"
 )
 

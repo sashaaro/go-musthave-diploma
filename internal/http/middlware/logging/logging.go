@@ -1,7 +1,7 @@
 package logging
 
 import (
-	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	logging2 "github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"runtime/debug"

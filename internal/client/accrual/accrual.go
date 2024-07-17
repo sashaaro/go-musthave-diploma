@@ -2,10 +2,10 @@ package accrual
 
 import (
 	"context"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/dto"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/http/api/orders"
-	httpClient "github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/http/client"
-	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual/dto"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual/http/api/orders"
+	httpClient "github.com/sashaaro/go-musthave-diploma/internal/client/accrual/http/client"
+	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 )
 
 type OrdersAPI interface {

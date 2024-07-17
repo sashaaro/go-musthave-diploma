@@ -1,7 +1,7 @@
 package client
 
 import (
-	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"io"
 	netHTTP "net/http"
 )

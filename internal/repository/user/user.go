@@ -5,8 +5,8 @@ import (
 	"errors"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
-	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"

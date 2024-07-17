@@ -2,17 +2,17 @@ package composition
 
 import (
 	"context"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
-	userOrdersHandler "github.com/sashaaro/go-musthave-diploma-tpl/internal/http/rest/user/orders"
-	orderRepository "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/order"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/service/order"
-	"github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual"
+	"github.com/sashaaro/go-musthave-diploma/internal/config"
+	"github.com/sashaaro/go-musthave-diploma/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma/internal/http"
+	userOrdersHandler "github.com/sashaaro/go-musthave-diploma/internal/http/rest/user/orders"
+	orderRepository "github.com/sashaaro/go-musthave-diploma/internal/repository/order"
+	"github.com/sashaaro/go-musthave-diploma/internal/service/order"
+	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"time"
 )
 

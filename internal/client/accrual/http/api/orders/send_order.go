@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/dto"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/http/api"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/client/accrual/http/api/orders/converter"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual/dto"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual/http/api"
+	"github.com/sashaaro/go-musthave-diploma/internal/client/accrual/http/api/orders/converter"
 	"net/http"
 	"strconv"
 )

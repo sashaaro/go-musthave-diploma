@@ -2,8 +2,8 @@ package privaterouter
 
 import (
 	"context"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
-	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma/internal/config"
+	logging2 "github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"net/http"
 )
 

@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 	"errors"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/config"
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
-	sql "github.com/sashaaro/go-musthave-diploma-tpl/internal/repository/user"
-	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	"github.com/sashaaro/go-musthave-diploma/internal/config"
+	"github.com/sashaaro/go-musthave-diploma/internal/domain/entity"
+	sql "github.com/sashaaro/go-musthave-diploma/internal/repository/user"
+	logging2 "github.com/sashaaro/go-musthave-diploma/pkg/logging"
 )
 
 type Storage interface {

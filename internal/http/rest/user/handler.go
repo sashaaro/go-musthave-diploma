@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 	"github.com/go-chi/chi/v5"
-	http2 "github.com/sashaaro/go-musthave-diploma-tpl/internal/http"
-	logging2 "github.com/sashaaro/go-musthave-diploma-tpl/pkg/logging"
+	http2 "github.com/sashaaro/go-musthave-diploma/internal/http"
+	logging2 "github.com/sashaaro/go-musthave-diploma/pkg/logging"
 	"net/http"
 )
 

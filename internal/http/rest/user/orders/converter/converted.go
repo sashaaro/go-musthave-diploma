@@ -1,7 +1,7 @@
 package converter
 
 import (
-	"github.com/sashaaro/go-musthave-diploma-tpl/internal/domain/entity"
+	"github.com/sashaaro/go-musthave-diploma/internal/domain/entity"
 	"time"
 )
 

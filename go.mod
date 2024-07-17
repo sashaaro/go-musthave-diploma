@@ -1,4 +1,4 @@
-module github.com/sashaaro/go-musthave-diploma-tpl
+module github.com/sashaaro/go-musthave-diploma
 
 go 1.19
 
