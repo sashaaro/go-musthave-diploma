@@ -44,15 +44,19 @@ type UserService interface {
 	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
 }
 
+type UserStorage interface {
+	IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error)
+}
+
 type UsersComposite struct {
 	Handler http.Handler
 	Service Service
 }
 
-func NewOrderComposite(cfg *config.Config, logger logging.Logger, db DB, jwtClient JWTClient, userService UserService) (*UsersComposite, error) {
+func NewOrderComposite(cfg *config.Config, logger logging.Logger, db DB, jwtClient JWTClient, userService UserService, userStorage UserStorage) (*UsersComposite, error) {
 	storage := orderRepository.NewStorage(db, logger)
 	accrualClient := accrual.New(*cfg.AccrualSystemAddress, logger)
-	service := user.NewOrderService(accrualClient, logger, storage, cfg)
+	service := order.NewOrderService(accrualClient, logger, storage, cfg, userStorage)
 
 	handler := newHandler(logger, service, jwtClient, userService)
 

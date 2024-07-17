@@ -26,8 +26,9 @@ type DB interface {
 }
 
 var (
-	ErrNotUniqueLogin                  = errors.New("пользователь с таким логином уже зарегистрирован")
-	ErrInvalidLoginPasswordCombination = errors.New("неверная пара логин/пароль")
+	ErrNotUniqueLogin                      = errors.New("пользователь с таким логином уже зарегистрирован")
+	ErrInvalidLoginPasswordCombination     = errors.New("неверная пара логин/пароль")
+	ErrWithdrawCountGreaterThanUserBalance = errors.New("Запрошенная сумма вывода больше, чем баланс пользователя")
 )
 
 func NewStorage(db DB, logger logging.Logger) *storage {
@@ -90,9 +91,63 @@ func (s *storage) GetById(ctx context.Context, userId int) (*entity.UserDB, erro
 
 	err := s.db.QueryRow(
 		ctx,
-		"SELECT id, login, password FROM gophermart.users WHERE id = $1",
+		"SELECT id, login, password, wallet, withdrawn FROM gophermart.users WHERE id = $1",
 		userId,
-	).Scan(&userDB.ID, &userDB.Login, &userDB.Password)
+	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
+	return &userDB, nil
+}
+
+func (s *storage) Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error) {
+	var userDB entity.UserDB
+
+	err := s.db.QueryRow(
+		ctx,
+		"SELECT id, login, password, wallet, withdrawn FROM gophermart.users WHERE id = $1",
+		userId,
+	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		s.logger.Error(err)
+		return nil, err
+	}
+
+	if userDB.Wallet < withdrawCount {
+		return nil, ErrWithdrawCountGreaterThanUserBalance
+	}
+
+	err = s.db.QueryRow(
+		ctx,
+		"UPDATE gophermart.users SET wallet=$2, withdrawn=$3 WHERE id = $1 RETURNING wallet, withdrawn",
+		userId,
+		userDB.Wallet-withdrawCount,
+		userDB.Withdrawn+withdrawCount,
+	).Scan(&userDB.Wallet, &userDB.Withdrawn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &userDB, nil
+}
+
+func (s *storage) IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error) {
+	var userDB entity.UserDB
+
+	err := s.db.QueryRow(
+		ctx,
+		"UPDATE gophermart.users SET wallet = wallet + $2 WHERE id = $1 RETURNING id, login, password, wallet, withdrawn",
+		userId,
+		incValue,
+	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}

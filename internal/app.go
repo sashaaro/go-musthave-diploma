@@ -45,7 +45,7 @@ func New(cfg *config.Config, logger logging2.Logger) (*App, error) {
 	userComposite.Handler.Register(router)
 
 	logger.Info("Создание orderComposite")
-	orderComposite, err := orderComposition.NewOrderComposite(cfg, logger, sql.DB, jwtClient, userComposite.Service)
+	orderComposite, err := orderComposition.NewOrderComposite(cfg, logger, sql.DB, jwtClient, userComposite.Service, userComposite.Storage)
 	if err != nil {
 		logger.Fatalf("Ошибка создания orderComposite %v", err)
 		return nil, err

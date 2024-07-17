@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"github.com/GTech1256/go-musthave-diploma-tpl/internal/config"
+	"log"
 	"net/http"
 	"time"
 )
@@ -28,5 +29,6 @@ func GetUserIdFromContext(ctx context.Context) *int {
 		return &userIdAny
 	}
 
+	log.Fatalln("нет userId")
 	return nil
 }

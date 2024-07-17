@@ -14,6 +14,7 @@ type Storage interface {
 	Register(ctx context.Context, userRegister *entity.UserRegisterJSON) (*entity.UserDB, error)
 	Login(ctx context.Context, userRegister *entity.UserLoginJSON) (*entity.UserDB, error)
 	GetById(ctx context.Context, userId int) (*entity.UserDB, error)
+	Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error)
 }
 
 type userService struct {
@@ -23,8 +24,9 @@ type userService struct {
 }
 
 var (
-	ErrNotUniqueLogin                  = errors.New("пользователь с таким логином уже зарегистрирован")
-	ErrInvalidLoginPasswordCombination = errors.New("неверная пара логин/пароль")
+	ErrNotUniqueLogin                      = errors.New("пользователь с таким логином уже зарегистрирован")
+	ErrInvalidLoginPasswordCombination     = errors.New("неверная пара логин/пароль")
+	ErrWithdrawCountGreaterThanUserBalance = errors.New("Запрошенная сумма вывода больше, чем баланс пользователя")
 )
 
 func NewUserService(logger logging2.Logger, storage Storage, cfg *config.Config) *userService {
@@ -79,4 +81,16 @@ func (u userService) GetIsUserExistById(ctx context.Context, userId int) (bool, 
 	}
 
 	return userDB != nil, nil
+}
+
+func (u userService) Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error) {
+	userDB, err := u.storage.Withdraw(ctx, userId, withdrawCount)
+	if errors.Is(err, sql.ErrWithdrawCountGreaterThanUserBalance) {
+		return nil, ErrWithdrawCountGreaterThanUserBalance
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return userDB, nil
 }
