@@ -17,15 +17,15 @@ type Accrual interface {
 }
 
 type Storage interface {
-	Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
+	Create(ctx context.Context, userID int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
 	GetByOrderNumber(ctx context.Context, orderNumber *entity.OrderNumber) (*entity.OrderDB, error)
 	GetOrdersForProcessing(ctx context.Context) ([]*entity.OrderDB, error)
 	Update(ctx context.Context, orderDB *entity.OrderDB) error
-	GetOrdersByUserId(ctx context.Context, userId int) ([]*entity.OrderDB, error)
+	GetOrdersByUserID(ctx context.Context, userID int) ([]*entity.OrderDB, error)
 }
 
 type UserStorage interface {
-	IncrementBalance(ctx context.Context, userId int, incValue float64) (*entity.UserDB, error)
+	IncrementBalance(ctx context.Context, userID int, incValue float64) (*entity.UserDB, error)
 }
 
 type userService struct {
@@ -51,20 +51,20 @@ func NewOrderService(accrual Accrual, logger logging.Logger, storage Storage, cf
 	}
 }
 
-func (u userService) Create(ctx context.Context, userId int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error) {
+func (u userService) Create(ctx context.Context, userID int, orderNumber *entity.OrderNumber) (*entity.OrderDB, error) {
 	orderDB, err := u.storage.GetByOrderNumber(ctx, orderNumber)
 	if err != nil {
 		return nil, err
 	}
 	if orderDB != nil {
-		if orderDB.UserId == userId {
+		if orderDB.UserID == userID {
 			return nil, ErrOrderNumberAlreadyUploadByCurrentUser
 		} else {
 			return nil, ErrOrderNumberAlreadyUploadByOtherUser
 		}
 	}
 
-	orderDB, err = u.storage.Create(ctx, userId, orderNumber)
+	orderDB, err = u.storage.Create(ctx, userID, orderNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -78,11 +78,8 @@ func (u userService) StartProcessingOrders() {
 
 	ticker := time.NewTicker(time.Second * 5)
 
-	for {
-		select {
-		case <-ticker.C:
-			u.processingOrders(ctx)
-		}
+	for range ticker.C {
+		u.processingOrders(ctx)
 	}
 }
 
@@ -127,7 +124,7 @@ func (u userService) processingOrder(order *entity.OrderDB) {
 				Valid:   true,
 			},
 			UploadedAt: order.UploadedAt,
-			UserId:     order.UserId,
+			UserID:     order.UserID,
 		}
 
 		u.logger.Infof("[processingOrder]: Обновление заказа в репозитории %v", *newOrderDB)
@@ -137,9 +134,9 @@ func (u userService) processingOrder(order *entity.OrderDB) {
 			u.logger.Errorf("[processingOrder]: Ошибка при обновлении %+v заказа в репозитории: %v", newOrderDB, err)
 			return
 		}
-		_, err = u.userStorage.IncrementBalance(ctx, newOrderDB.UserId, newOrderDB.Accrual.Float64)
+		_, err = u.userStorage.IncrementBalance(ctx, newOrderDB.UserID, newOrderDB.Accrual.Float64)
 		if err != nil {
-			u.logger.Errorf("[processingOrder]: Ошибка при увеличении баланса пользователя %v", newOrderDB.UserId)
+			u.logger.Errorf("[processingOrder]: Ошибка при увеличении баланса пользователя %v", newOrderDB.UserID)
 			return
 		}
 	} else {
@@ -149,8 +146,8 @@ func (u userService) processingOrder(order *entity.OrderDB) {
 	u.logger.Infof("[processingOrder]: Заказ обработан: %+v", order)
 }
 
-func (u userService) GetOrdersStatusJSONs(ctx context.Context, userId int) ([]*entity.OrderStatusJSON, error) {
-	orders, err := u.storage.GetOrdersByUserId(ctx, userId)
+func (u userService) GetOrdersStatusJSONs(ctx context.Context, userID int) ([]*entity.OrderStatusJSON, error) {
+	orders, err := u.storage.GetOrdersByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}

@@ -27,11 +27,11 @@ var (
 func New(cfg *config.Config, logger logging2.Logger) (*App, error) {
 	jwtClient := jwt2.NewJwt(*cfg.JWTTokenExp, *cfg.JWTSecretKey)
 	sql, err := sql2.NewSQL(*cfg.DatabaseURI)
-	defer sql.DB.Close()
 	if err != nil {
 		logger.Error(err)
 		return nil, ErrNoSQLConnection
 	}
+	defer sql.DB.Close()
 	router := chi.NewRouter()
 
 	logger.Info("Создание userComposite")

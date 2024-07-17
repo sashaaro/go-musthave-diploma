@@ -19,19 +19,20 @@ import (
 )
 
 type JWTClient interface {
-	BuildJWTString(userId int) (string, error)
+	BuildJWTString(userID int) (string, error)
 	GetTokenExp() time.Duration
 	GetUserID(tokenString string) (int, error)
 }
 
 type UserExister interface {
-	GetIsUserExistById(ctx context.Context, userId int) (bool, error)
+	GetIsUserExistByIВ(ctx context.Context, userID int) (bool, error)
 }
 
 type Service interface {
 	Login(ctx context.Context, userRegister *entity.UserLoginJSON) (*entity.UserDB, error)
-	GetById(ctx context.Context, userId int) (*entity.UserDB, error)
-	Withdraw(ctx context.Context, userId int, withdrawCount float64) (*entity.UserDB, error)
+	GetByID(ctx context.Context, userID int) (*entity.UserDB, error)
+	Withdraw(ctx context.Context, withdrawalRawRecord entity.WithdrawalRawRecord) (*entity.UserDB, error)
+	GetWithdrawals(ctx context.Context, userID int) ([]*entity.WithdrawalDB, error)
 }
 
 type handler struct {
@@ -58,15 +59,16 @@ func NewHandler(logger logging2.Logger, updateService Service, jwtClient JWTClie
 func (h handler) Register(router *chi.Mux) {
 	router.Get("/api/user/balance", privateRouter.WithPrivateRouter(http.HandlerFunc(h.userBalance), h.logger, h.jwtClient, h.userExister))
 	router.Post("/api/user/balance/withdraw", privateRouter.WithPrivateRouter(http.HandlerFunc(h.userBalanceWithdraw), h.logger, h.jwtClient, h.userExister))
+	router.Get("/api/user/withdrawals", privateRouter.WithPrivateRouter(http.HandlerFunc(h.userWithdrawals), h.logger, h.jwtClient, h.userExister))
 }
 
 // userBalance /api/user/balance
 func (h handler) userBalance(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 
-	userId := auth.GetUserIdFromContext(ctx)
+	userID := auth.GetUserIDFromContext(ctx)
 
-	userDB, err := h.service.GetById(ctx, *userId)
+	userDB, err := h.service.GetByID(ctx, *userID)
 
 	if err != nil {
 		h.logger.Error(err)
@@ -82,8 +84,8 @@ func (h handler) userBalance(writer http.ResponseWriter, request *http.Request) 
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
-	writer.Write(encodedUserBalance)
 	writer.WriteHeader(http.StatusOK)
+	writer.Write(encodedUserBalance)
 }
 
 func encodeUserBalance(userDB *entity.UserDB) ([]byte, error) {
@@ -104,7 +106,7 @@ func encodeUserBalance(userDB *entity.UserDB) ([]byte, error) {
 // - `500` — внутренняя ошибка сервера.
 func (h handler) userBalanceWithdraw(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
-	userId := auth.GetUserIdFromContext(ctx)
+	userID := auth.GetUserIDFromContext(ctx)
 	withdrawRequestBody, err := decodeWithdrawRequestBody(&request.Body)
 	// `500` — внутренняя ошибка сервера.
 	if err != nil {
@@ -119,8 +121,14 @@ func (h handler) userBalanceWithdraw(writer http.ResponseWriter, request *http.R
 		writer.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
-	//fmt.Println(withdrawRequestBody.Sum)
-	_, err = h.service.Withdraw(ctx, *userId, withdrawRequestBody.Sum)
+
+	withdrawalRawRecord := entity.WithdrawalRawRecord{
+		Order:  withdrawRequestBody.Order,
+		Sum:    withdrawRequestBody.Sum,
+		UserID: *userID,
+	}
+
+	_, err = h.service.Withdraw(ctx, withdrawalRawRecord)
 	// `402` — на счету недостаточно средств;
 	if errors.Is(err, user.ErrWithdrawCountGreaterThanUserBalance) {
 		h.logger.Info(err)
@@ -136,7 +144,6 @@ func (h handler) userBalanceWithdraw(writer http.ResponseWriter, request *http.R
 
 	// `200` — успешная обработка запроса;
 	writer.WriteHeader(http.StatusOK)
-	return
 }
 
 func decodeWithdrawRequestBody(body *io.ReadCloser) (*WithdrawRequestBody, error) {
@@ -149,4 +156,65 @@ func decodeWithdrawRequestBody(body *io.ReadCloser) (*WithdrawRequestBody, error
 	}
 
 	return &withdrawRequestBody, nil
+}
+
+// userWithdrawals /api/user/balance/withdrawals
+// Возможные коды ответа:
+// - `200` — успешная обработка запроса.
+// Формат ответа:
+// `200 OK HTTP/1.1
+//
+//	Content-Type: application/json
+//	[
+//	    {
+//	        "order": "2377225624",
+//	        "sum": 500,
+//	        "processed_at": "2020-12-09T16:09:57+03:00"
+//	    }
+//	]`
+//
+// - `204` — нет ни одного списания.
+// - `401` — пользователь не авторизован.
+// - `500` — внутренняя ошибка сервера.
+func (h handler) userWithdrawals(writer http.ResponseWriter, request *http.Request) {
+	ctx := request.Context()
+	userID := auth.GetUserIDFromContext(ctx)
+
+	withdrawals, err := h.service.GetWithdrawals(ctx, *userID)
+	// `500` — внутренняя ошибка сервера.
+	if err != nil {
+		h.logger.Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// `204` — нет ни одного списания.
+	if len(withdrawals) == 0 {
+		writer.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	withdrawalsJSONs := make([]entity.WithdrawalJSON, 0)
+
+	for _, withdrawal := range withdrawals {
+		withdrawalsJSON := entity.WithdrawalJSON{
+			Order:       withdrawal.Order,
+			Sum:         withdrawal.Sum,
+			ProcessedAt: withdrawal.ProcessedAt.Time.Format(time.RFC3339),
+		}
+		withdrawalsJSONs = append(withdrawalsJSONs, withdrawalsJSON)
+	}
+
+	withdrawalsByte, err := json.Marshal(withdrawalsJSONs)
+	// `500` — внутренняя ошибка сервера.
+	if err != nil {
+
+		h.logger.Error(err)
+		writer.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// `200` — успешная обработка запроса;
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+	writer.Write(withdrawalsByte)
 }
