@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"github.com/go-chi/chi/v5"
 	orderComposition "github.com/sashaaro/go-musthave-diploma/internal/composition/order"
 	userComposition "github.com/sashaaro/go-musthave-diploma/internal/composition/user"
@@ -20,16 +19,11 @@ type App struct {
 	cfg    *config.Config
 }
 
-var (
-	ErrNoSQLConnection = errors.New("нет подключения к БД")
-)
-
 func New(cfg *config.Config, logger logging2.Logger) (*App, error) {
 	jwtClient := jwt2.NewJwt(*cfg.JWTTokenExp, *cfg.JWTSecretKey)
 	sql, err := sql2.NewSQL(*cfg.DatabaseURI)
 	if err != nil {
-		logger.Error(err)
-		return nil, ErrNoSQLConnection
+		return nil, err
 	}
 	defer sql.DB.Close()
 	router := chi.NewRouter()
@@ -37,7 +31,6 @@ func New(cfg *config.Config, logger logging2.Logger) (*App, error) {
 	logger.Info("Создание userComposite")
 	userComposite, err := userComposition.NewUserComposite(cfg, logger, sql.DB, jwtClient)
 	if err != nil {
-		logger.Fatalf("Ошибка создания userComposite %v", err)
 		return nil, err
 	}
 
@@ -47,7 +40,6 @@ func New(cfg *config.Config, logger logging2.Logger) (*App, error) {
 	logger.Info("Создание orderComposite")
 	orderComposite, err := orderComposition.NewOrderComposite(cfg, logger, sql.DB, jwtClient, userComposite.Service, userComposite.Storage)
 	if err != nil {
-		logger.Fatalf("Ошибка создания orderComposite %v", err)
 		return nil, err
 	}
 

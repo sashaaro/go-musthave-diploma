@@ -7,8 +7,7 @@ import (
 )
 
 type httpClient struct {
-	HashKey *string
-	logger  logging.Logger
+	logger logging.Logger
 }
 
 func New(logger logging.Logger) ClientHTTP {

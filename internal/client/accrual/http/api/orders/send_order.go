@@ -21,6 +21,7 @@ var (
 type TooManyRequestsError struct {
 	RetryAfter uint
 	Err        error
+	HTTPClient *http.Client
 }
 
 // Error добавляет поддержку интерфейса error для типа TimeError.
@@ -33,6 +34,7 @@ func NewTooManyRequestsError(err error, retryAfter uint) error {
 	return &TooManyRequestsError{
 		RetryAfter: retryAfter,
 		Err:        err,
+		HTTPClient: &http.Client{},
 	}
 }
 
@@ -41,20 +43,17 @@ func (s update) SendOrder(ctx context.Context, orderDTO dto.Order) (*dto.OrderRe
 
 	req, err := s.HTTPClient.NewRequest(http.MethodGet, requestURL, nil)
 	if err != nil {
-		s.logger.Errorf("[accrual]: SendOrder - Невозможно создать запрос: %s", err)
-		return nil, api.ErrRequestInitiate
+		return nil, fmt.Errorf("%s: %w", api.ErrRequestInitiate, err)
 	}
 
-	res, err := http.DefaultClient.Do(req) // s.HTTPClient.Do(req)
+	res, err := s.HTTPClient.Do(req)
 	if err != nil {
-		s.logger.Errorf("[accrual]: SendOrder Ошибка отправки запроса: %v", err)
-
-		return nil, api.ErrRequestDo
+		return nil, fmt.Errorf("%s: %w", api.ErrRequestDo, err)
 	}
 
 	defer res.Body.Close()
 
-	s.logger.Infof("%d %v \n", res.StatusCode, requestURL)
+	s.logger.Debug("%d %v \n", res.StatusCode, requestURL)
 
 	orderResponse, err := getResponse(res)
 	if err != nil {

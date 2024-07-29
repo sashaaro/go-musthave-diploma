@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	server "github.com/sashaaro/go-musthave-diploma/internal"
 	"github.com/sashaaro/go-musthave-diploma/internal/config"
 	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
@@ -19,16 +18,9 @@ func main() {
 	logging.Init()
 	logger := logging.NewMyLogger()
 
-	cfgMarshal, err := json.MarshalIndent(&cfg, "", "   ")
-	if err == nil {
-		logger.Info("CFG: ", string(cfgMarshal))
-	}
-
 	logger.Info("Запуск приложения")
 	_, err = server.New(cfg, logger)
 	if err != nil {
-		logger.Error("Запуск приложения провалено", err)
-		return
-
+		logger.Fatalf("Запуск приложения провалено", err)
 	}
 }

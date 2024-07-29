@@ -83,6 +83,14 @@ func (m *MyLogger) Errorf(format string, args ...interface{}) {
 	m.Entry.Errorf(format, args...)
 }
 
+func (m *MyLogger) Debug(args ...interface{}) {
+	m.mx.Lock()
+	defer m.mx.Unlock()
+
+	m.Entry.Data["file"] = fileInfo(2)
+	m.Entry.Debug(args...)
+}
+
 func (m *MyLogger) Info(args ...interface{}) {
 	m.mx.Lock()
 	defer m.mx.Unlock()

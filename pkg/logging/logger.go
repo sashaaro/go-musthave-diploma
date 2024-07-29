@@ -7,6 +7,7 @@ type Logger interface {
 	WithField(key string, value interface{}) Logger
 	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
+	Debug(args ...interface{})
 	Info(args ...interface{})
 	Infof(format string, args ...interface{})
 	Fatal(args ...interface{})

@@ -27,6 +27,10 @@ func (m *LoggerMock) Errorf(format string, args ...interface{}) {
 	m.Called(append([]interface{}{format}, args...))
 }
 
+func (m *LoggerMock) Debug(args ...interface{}) {
+	m.Called(args...)
+}
+
 func (m *LoggerMock) Info(args ...interface{}) {
 	m.Called(args...)
 }
