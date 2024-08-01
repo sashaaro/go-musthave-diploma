@@ -47,12 +47,12 @@ func NewSQL(host string) (*SQL, error) {
 		DB: db,
 	}
 
-	err = s.MigrateDown(host)
+	err = s.migrateDown(host)
 	if err != nil {
 		fmt.Println("ERROR: MigrationDown", err)
 	}
 
-	err = s.MigrateUp(host)
+	err = s.migrateUp(host)
 	if err != nil {
 		fmt.Println("ERROR: MigrationUp", err)
 	}
@@ -66,7 +66,7 @@ func pingWithRetry(ctx context.Context, db *pgxpool.Pool) error {
 	})
 }
 
-func (q SQL) MigrateUp(dataSourceName string) error {
+func (q SQL) migrateUp(dataSourceName string) error {
 	fmt.Println("Migration Up Started")
 	m, err := migrate.New(
 		"file://internal/config/db/migrations",
@@ -83,7 +83,7 @@ func (q SQL) MigrateUp(dataSourceName string) error {
 	return nil
 }
 
-func (q SQL) MigrateDown(dataSourceName string) error {
+func (q SQL) migrateDown(dataSourceName string) error {
 	fmt.Println("Migration Down Started")
 	m, err := migrate.New(
 		"file://internal/config/db/migrations",
