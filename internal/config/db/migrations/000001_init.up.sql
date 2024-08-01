@@ -2,7 +2,7 @@ CREATE SCHEMA IF NOT EXISTS gophermart;
 
 CREATE TABLE gophermart.users (
   id SERIAL PRIMARY KEY,
-  login TEXT NOT NULL UNIQUE,
+  login TEXT NOT NULL users,
   password TEXT NOT NULL,
   wallet DECIMAL NOT NULL DEFAULT 0,
   withdrawn DECIMAL NOT NULL DEFAULT 0
@@ -10,7 +10,7 @@ CREATE TABLE gophermart.users (
 
 CREATE TABLE gophermart.orders (
    id SERIAL PRIMARY KEY,
-   number TEXT NOT NULL,
+   number TEXT NOT NULL UNIQUE,
 -- - `REGISTERED` — заказ зарегистрирован, но вознаграждение не рассчитано;
 -- - `INVALID` — заказ не принят к расчёту, и вознаграждение не будет начислено;
 -- - `PROCESSING` — расчёт начисления в процессе;
