@@ -68,7 +68,7 @@ func (h handler) userBalance(writer http.ResponseWriter, request *http.Request) 
 
 	userID := auth.GetUserIDFromContext(ctx)
 
-	userDB, err := h.service.GetByID(ctx, *userID)
+	userDB, err := h.service.GetByID(ctx, userID)
 
 	if err != nil {
 		h.logger.Error(err)
@@ -125,7 +125,7 @@ func (h handler) userBalanceWithdraw(writer http.ResponseWriter, request *http.R
 	withdrawalRawRecord := entity.WithdrawalRawRecord{
 		Order:  withdrawRequestBody.Order,
 		Sum:    withdrawRequestBody.Sum,
-		UserID: *userID,
+		UserID: userID,
 	}
 
 	_, err = h.service.Withdraw(ctx, withdrawalRawRecord)
@@ -180,7 +180,7 @@ func (h handler) userWithdrawals(writer http.ResponseWriter, request *http.Reque
 	ctx := request.Context()
 	userID := auth.GetUserIDFromContext(ctx)
 
-	withdrawals, err := h.service.GetWithdrawals(ctx, *userID)
+	withdrawals, err := h.service.GetWithdrawals(ctx, userID)
 	// `500` — внутренняя ошибка сервера.
 	if err != nil {
 		h.logger.Error(err)

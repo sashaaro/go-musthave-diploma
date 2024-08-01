@@ -84,7 +84,7 @@ func (h handler) uploadOrder(writer http.ResponseWriter, request *http.Request) 
 
 	orderString := strconv.Itoa(*order)
 
-	_, err = h.service.Create(request.Context(), *userID, (*entity.OrderNumber)(&orderString))
+	_, err = h.service.Create(request.Context(), userID, (*entity.OrderNumber)(&orderString))
 	if errors.Is(err, user.ErrOrderNumberAlreadyUploadByCurrentUser) {
 		// `200` — номер заказа уже был загружен этим пользователем;
 		writer.WriteHeader(http.StatusOK)
@@ -142,7 +142,7 @@ func (h handler) getOrder(writer http.ResponseWriter, request *http.Request) {
 	ctx := request.Context()
 	userID := auth.GetUserIDFromContext(ctx)
 
-	ordersStatusJSONs, err := h.service.GetOrdersStatusJSONs(ctx, *userID)
+	ordersStatusJSONs, err := h.service.GetOrdersStatusJSONs(ctx, userID)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		return

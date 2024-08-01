@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/sashaaro/go-musthave-diploma/internal/config"
 	privateRouter "github.com/sashaaro/go-musthave-diploma/internal/http/middlware/private_router"
-	"log"
 	"net/http"
 	"time"
 )
@@ -24,12 +23,7 @@ func SetAuthCookie(w http.ResponseWriter, authToken string, tokenExp time.Durati
 	http.SetCookie(w, &cookie)
 }
 
-func GetUserIDFromContext(ctx context.Context) *int {
-	userIDAny, ok := ctx.Value(privateRouter.KeyUserID).(int)
-	if ok {
-		return &userIDAny
-	}
-
-	log.Fatalln("нет userID")
-	return nil
+func GetUserIDFromContext(ctx context.Context) int {
+	userIDAny, _ := ctx.Value(privateRouter.KeyUserID).(int)
+	return userIDAny
 }
