@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
+	_ "github.com/lib/pq"
 	orderComposition "github.com/sashaaro/go-musthave-diploma/internal/composition/order"
 	userComposition "github.com/sashaaro/go-musthave-diploma/internal/composition/user"
 	"github.com/sashaaro/go-musthave-diploma/internal/config"
