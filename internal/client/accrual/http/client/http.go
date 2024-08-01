@@ -6,17 +6,17 @@ import (
 	netHTTP "net/http"
 )
 
-type HttpClient struct {
+type HTTPClient struct {
 	logger logging.Logger
 }
 
-func New(logger logging.Logger) *HttpClient {
-	return &HttpClient{
+func New(logger logging.Logger) *HTTPClient {
+	return &HTTPClient{
 		logger: logger,
 	}
 }
 
-func (h HttpClient) NewRequest(method, url string, body io.Reader) (*netHTTP.Request, error) {
+func (h HTTPClient) NewRequest(method, url string, body io.Reader) (*netHTTP.Request, error) {
 	r, err := netHTTP.NewRequest(method, url, body)
 	if err != nil {
 		return nil, err
@@ -25,6 +25,6 @@ func (h HttpClient) NewRequest(method, url string, body io.Reader) (*netHTTP.Req
 	return r, err
 }
 
-func (h HttpClient) Do(req *netHTTP.Request) (*netHTTP.Response, error) {
+func (h HTTPClient) Do(req *netHTTP.Request) (*netHTTP.Response, error) {
 	return netHTTP.DefaultClient.Do(req)
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// MockHTTPClient is a mocks implementation of HttpClient
+// MockHTTPClient is a mocks implementation of HTTPClient
 type MockHTTPClient struct {
 	mock.Mock
 }

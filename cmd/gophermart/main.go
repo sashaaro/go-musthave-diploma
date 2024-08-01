@@ -21,6 +21,6 @@ func main() {
 	logger.Info("Запуск приложения")
 	_, err = server.New(cfg, logger)
 	if err != nil {
-		logger.Fatalf("Запуск приложения провалено", err)
+		logger.Fatalf("Запуск приложения провалено: %s", err)
 	}
 }
