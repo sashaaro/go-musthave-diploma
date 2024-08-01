@@ -47,11 +47,6 @@ func NewSQL(host string) (*SQL, error) {
 		DB: db,
 	}
 
-	err = s.migrateDown(host)
-	if err != nil {
-		fmt.Println("ERROR: MigrationDown", err)
-	}
-
 	err = s.migrateUp(host)
 	if err != nil {
 		fmt.Println("ERROR: MigrationUp", err)
@@ -80,22 +75,5 @@ func (q SQL) migrateUp(dataSourceName string) error {
 	}
 
 	fmt.Println("Migration Up Ended")
-	return nil
-}
-
-func (q SQL) migrateDown(dataSourceName string) error {
-	fmt.Println("Migration Down Started")
-	m, err := migrate.New(
-		"file://internal/config/db/migrations",
-		dataSourceName)
-	if err != nil {
-		return err
-	}
-	err = m.Down()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("Migration Down Ended")
 	return nil
 }
