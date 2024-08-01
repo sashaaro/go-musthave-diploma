@@ -9,7 +9,6 @@ import (
 	"github.com/sashaaro/go-musthave-diploma/pkg/logging"
 
 	_ "github.com/golang-migrate/migrate/v4/source/file"
-	_ "github.com/lib/pq"
 )
 
 type storage struct {

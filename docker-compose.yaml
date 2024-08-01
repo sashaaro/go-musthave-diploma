@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:15-alpine3.17
+    network_mode: host
+    environment:
+      - POSTGRES_DB=app
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
+    volumes:
+      - /var/lib/postgresql
+
+  app:
+    image: golang:1.21-alpine3.20
+    command: "run ./cmd/gophermart"
+    entrypoint: "go"
+    network_mode: host
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      - DATABASE_URI=postgresql://root:root@localhost/app?sslmode=disable
