@@ -45,7 +45,7 @@ func (s *storage) Register(ctx context.Context, userRegister *entity.UserRegiste
 	var userDB entity.UserDB
 	err := s.db.QueryRow(
 		ctx,
-		"INSERT INTO gophermart.users (login, password) values ($1, $2) RETURNING id, login, password",
+		"INSERT INTO users (login, password) values ($1, $2) RETURNING id, login, password",
 		userRegister.Login,
 		userRegister.Password,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password)
@@ -70,7 +70,7 @@ func (s *storage) Login(ctx context.Context, userRegister *entity.UserLoginJSON)
 
 	err := s.db.QueryRow(
 		ctx,
-		"SELECT id, login, password FROM gophermart.users WHERE login = $1 AND password = $2",
+		"SELECT id, login, password FROM users WHERE login = $1 AND password = $2",
 		userRegister.Login,
 		userRegister.Password,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password)
@@ -90,7 +90,7 @@ func (s *storage) GetByID(ctx context.Context, userID int) (*entity.UserDB, erro
 
 	err := s.db.QueryRow(
 		ctx,
-		"SELECT id, login, password, wallet, withdrawn FROM gophermart.users WHERE id = $1",
+		"SELECT id, login, password, wallet, withdrawn FROM users WHERE id = $1",
 		userID,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -109,7 +109,7 @@ func (s *storage) Withdraw(ctx context.Context, userID int, withdrawCount float6
 
 	err := s.db.QueryRow(
 		ctx,
-		"SELECT id, login, password, wallet, withdrawn FROM gophermart.users WHERE id = $1",
+		"SELECT id, login, password, wallet, withdrawn FROM users WHERE id = $1",
 		userID,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -126,7 +126,7 @@ func (s *storage) Withdraw(ctx context.Context, userID int, withdrawCount float6
 
 	err = s.db.QueryRow(
 		ctx,
-		"UPDATE gophermart.users SET wallet=$2, withdrawn=$3 WHERE id = $1 RETURNING wallet, withdrawn",
+		"UPDATE users SET wallet=$2, withdrawn=$3 WHERE id = $1 RETURNING wallet, withdrawn",
 		userID,
 		userDB.Wallet-withdrawCount,
 		userDB.Withdrawn+withdrawCount,
@@ -141,7 +141,7 @@ func (s *storage) Withdraw(ctx context.Context, userID int, withdrawCount float6
 func (s *storage) AddWithdrawRecord(ctx context.Context, withdrawalRawRecord entity.WithdrawalRawRecord) error {
 	_, err := s.db.Exec(
 		ctx,
-		"INSERT INTO gophermart.withdrawals (\"order\", sum, user_id) VALUES ($1, $2, $3)",
+		"INSERT INTO withdrawals (\"order\", sum, user_id) VALUES ($1, $2, $3)",
 		withdrawalRawRecord.Order,
 		withdrawalRawRecord.Sum,
 		withdrawalRawRecord.UserID,
@@ -159,7 +159,7 @@ func (s *storage) IncrementBalance(ctx context.Context, userID int, incValue flo
 
 	err := s.db.QueryRow(
 		ctx,
-		"UPDATE gophermart.users SET wallet = wallet + $2 WHERE id = $1 RETURNING id, login, password, wallet, withdrawn",
+		"UPDATE users SET wallet = wallet + $2 WHERE id = $1 RETURNING id, login, password, wallet, withdrawn",
 		userID,
 		incValue,
 	).Scan(&userDB.ID, &userDB.Login, &userDB.Password, &userDB.Wallet, &userDB.Withdrawn)
@@ -179,7 +179,7 @@ func (s *storage) GetWithdrawals(ctx context.Context, userID int) ([]*entity.Wit
 
 	row, err := s.db.Query(
 		ctx,
-		"SELECT id, \"order\", sum, processed_at, user_id  FROM gophermart.withdrawals WHERE user_id = $1",
+		"SELECT id, \"order\", sum, processed_at, user_id  FROM withdrawals WHERE user_id = $1",
 		userID,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {

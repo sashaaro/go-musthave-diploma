@@ -1,4 +1,5 @@
-DROP SCHEMA IF EXISTS gophermart;
-DROP TABLE IF EXISTS gophermart.users;
-DROP TABLE IF EXISTS gophermart.orders;
-DROP TABLE IF EXISTS gophermart.withdrawals;
+START TRANSACTION;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS withdrawals;
+COMMIT;

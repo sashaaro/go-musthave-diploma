@@ -40,7 +40,7 @@ func (s *storage) Create(ctx context.Context, userID int, orderNumber *entity.Or
 
 	err := s.db.QueryRow(
 		ctx,
-		"INSERT INTO gophermart.orders (number, status, user_id) values ($1, $2, $3) RETURNING id, number, status, accrual, uploaded_at, user_id",
+		"INSERT INTO orders (number, status, user_id) values ($1, $2, $3) RETURNING id, number, status, accrual, uploaded_at, user_id",
 		*orderNumber,
 		"REGISTERED",
 		userID,
@@ -58,7 +58,7 @@ func (s *storage) GetByOrderID(ctx context.Context, orderID int) (*entity.OrderD
 
 	err := s.db.QueryRow(
 		ctx,
-		"SELECT id, number, status, accrual, uploaded_at, user_id FROM gophermart.orders WHERE id = $1",
+		"SELECT id, number, status, accrual, uploaded_at, user_id FROM orders WHERE id = $1",
 		orderID,
 	).Scan(&orderDB.ID, &orderDB.Number, &orderDB.Status, &orderDB.Accrual, &orderDB.UploadedAt, &orderDB.UserID)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -77,7 +77,7 @@ func (s *storage) GetByOrderNumber(ctx context.Context, orderNumber *entity.Orde
 
 	err := s.db.QueryRow(
 		ctx,
-		"SELECT id, number, status, accrual, uploaded_at, user_id FROM gophermart.orders WHERE number = $1",
+		"SELECT id, number, status, accrual, uploaded_at, user_id FROM orders WHERE number = $1",
 		*orderNumber,
 	).Scan(&orderDB.ID, &orderDB.Number, &orderDB.Status, &orderDB.Accrual, &orderDB.UploadedAt, &orderDB.UserID)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -96,7 +96,7 @@ func (s *storage) GetOrdersForProcessing(ctx context.Context) ([]*entity.OrderDB
 
 	row, err := s.db.Query(
 		ctx,
-		"SELECT id, number, status, accrual, uploaded_at, user_id FROM gophermart.orders WHERE status IN ('REGISTERED', 'PROCESSING')",
+		"SELECT id, number, status, accrual, uploaded_at, user_id FROM orders WHERE status IN ('REGISTERED', 'PROCESSING')",
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return orderDBs, nil
@@ -123,7 +123,7 @@ func (s *storage) GetOrdersForProcessing(ctx context.Context) ([]*entity.OrderDB
 func (s *storage) Update(ctx context.Context, orderDB *entity.OrderDB) error {
 	_, err := s.db.Exec(
 		ctx,
-		"UPDATE gophermart.orders SET status=$2, accrual=$3 WHERE id = $1",
+		"UPDATE orders SET status=$2, accrual=$3 WHERE id = $1",
 		orderDB.ID,
 		orderDB.Status,
 		orderDB.Accrual,
@@ -144,7 +144,7 @@ func (s *storage) GetOrdersByUserID(ctx context.Context, userID int) ([]*entity.
 
 	row, err := s.db.Query(
 		ctx,
-		"SELECT id, number, status, accrual, uploaded_at, user_id FROM gophermart.orders WHERE user_id = $1",
+		"SELECT id, number, status, accrual, uploaded_at, user_id FROM orders WHERE user_id = $1",
 		userID,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {

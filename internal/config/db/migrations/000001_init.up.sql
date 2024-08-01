@@ -1,14 +1,14 @@
-CREATE SCHEMA IF NOT EXISTS gophermart;
+START TRANSACTION;
 
-CREATE TABLE gophermart.users (
+CREATE TABLE users (
   id SERIAL PRIMARY KEY,
-  login TEXT NOT NULL users,
+  login TEXT NOT NULL UNIQUE,
   password TEXT NOT NULL,
   wallet DECIMAL NOT NULL DEFAULT 0,
   withdrawn DECIMAL NOT NULL DEFAULT 0
 );
 
-CREATE TABLE gophermart.orders (
+CREATE TABLE orders (
    id SERIAL PRIMARY KEY,
    number TEXT NOT NULL UNIQUE,
 -- - `REGISTERED` — заказ зарегистрирован, но вознаграждение не рассчитано;
@@ -18,13 +18,15 @@ CREATE TABLE gophermart.orders (
    status TEXT NOT NULL,
    accrual NUMERIC,
    uploaded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-   user_id INTEGER REFERENCES gophermart.users(id)
+   user_id INTEGER REFERENCES users(id)
 );
 
-CREATE TABLE gophermart.withdrawals (
+CREATE TABLE withdrawals (
     id SERIAL PRIMARY KEY,
     "order" TEXT NOT NULL,
     sum DECIMAL,
     processed_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    user_id INTEGER REFERENCES gophermart.users(id)
+    user_id INTEGER REFERENCES users(id)
 );
+
+COMMIT;
